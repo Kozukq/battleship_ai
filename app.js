@@ -13,10 +13,32 @@ function main() {
 	canvas.height = 1000;
 	canvas.width = 500;
 
-	let tilesPerLine = 11;
+	let tilesPerLine = 10;
 	let offset = 10;
 
-	let grid = new Grid(tilesPerLine,canvas.width,offset);
+	let img = new Image();
+	img.src = "images/redcross.jpg";
+
+	let grid = new Grid(tilesPerLine,canvas.width,offset,img);
+
+	let ships = {
+
+		destroyer1 : [0,1],
+		destroyer2 : [29,39],
+		destroyer3 : [55,65],
+		destroyer4 : [70,71],
+
+		submarine1 : [3,13,23],
+		submarine2 : [25,26,27],
+		submarine3 : [59,69,79],
+
+		battleship1 : [6,7,8,9],
+		battleship2 : [20,30,40,50],
+
+		aircraftcarrier1 : [95,96,97,98,99]
+	}
+
+	grid.generate(ships);
 
 	grid.draw(context2D);
 
@@ -29,16 +51,19 @@ function main() {
 
 		console.log(id);
 
-		grid.tiles[id].updateColor("black");
+		grid.attack(id);
 
 		grid.draw(context2D);
+
+		if(grid.isGameOver()) window.alert("Well played game is over.");
 	});
 }
 
 class Grid {
 
-	constructor(tilesPerLine, canvasWidth, offset) {
+	constructor(tilesPerLine, canvasWidth, offset, image) {
 
+		this.score = 0;
 		this.tilesPerLine = tilesPerLine;
 		this.tiles = new Array(tilesPerLine * tilesPerLine);
 
@@ -51,7 +76,7 @@ class Grid {
 
 			for(let j = 0; j < tilesPerLine; j++) {
 
-				this.tiles[i * tilesPerLine + j] = new Tile(xPos,yPos,tileSize);
+				this.tiles[i * tilesPerLine + j] = new Tile(xPos,yPos,tileSize,image);
 
 				xPos += tileSize;
 			}
@@ -59,6 +84,19 @@ class Grid {
 			xPos = offset;
 			yPos += tileSize;
 		}
+	}
+
+	generate(ships) {
+
+		for(const [boatID,indices] of Object.entries(ships)) {
+    	
+    		indices.forEach(index => this.tiles[index].isOccupied = true);
+		} 
+	}
+
+	attack(id) {
+
+		this.score += this.tiles[id].attack();
 	}
 
 	draw(context2D) {
@@ -90,16 +128,48 @@ class Grid {
 
 		return id;
 	}
+
+	isGameOver() {
+
+		return this.score == 30;
+	}
 }
 
 class Tile {
 
-	constructor(xPos, yPos, size) {
+	constructor(xPos, yPos, size, image) {
 
 		this.xPos = xPos;
 		this.yPos = yPos;
 		this.size = size;
+		this.image = image;
+		this.isOccupied = false;
+		this.isPlayed = false;
 		this.color = "white";
+	}
+
+	attack() {
+
+		let score = 0;
+
+		if(!this.isPlayed) {
+
+			if(this.isOccupied) {
+
+				this.color = "black";
+
+				score = 1;
+			}
+
+			this.isPlayed = true;
+		}
+
+		else {
+
+			window.alert("Tile already attacked !");
+		}
+
+		return score;
 	}
 
 	draw(context2D) {
@@ -107,10 +177,6 @@ class Tile {
 		context2D.fillStyle = this.color;
 		context2D.fillRect(this.xPos,this.yPos,this.size,this.size);
 		context2D.strokeRect(this.xPos,this.yPos,this.size,this.size);
-	}
-
-	updateColor(color) {
-
-		this.color = color;
+		if(this.isPlayed) context2D.drawImage(this.image,this.xPos,this.yPos,this.size,this.size);
 	}
 }
