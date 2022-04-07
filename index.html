@@ -4,10 +4,25 @@
 <head>
 	<meta charset="UTF-8">
 	<title>battleship_ai</title>
+	<link href="styles.css" rel="stylesheet">
 </head>
 
 <body>
-	<canvas id="canvas"></canvas>
+	<div id="container">
+		<div id="player" class="moves">
+			<h1 class="movesTitle">Player moves</h1>
+			<div id="playerMoves" style="width:100%;"></div>
+		</div>
+		<div id="game">
+			<h1 style="font-size:4em;">battleship.ai</h1>
+			<canvas></canvas>
+		</div>
+		<div id="ai" class="moves">
+			<h1 class="movesTitle">AI moves</h1>
+			<div id="aiMoves" style="width:100%;"></div>
+		</div>
+	</div>
+	<script src="ships.js"></script>
 	<script src="app.js"></script>
 </body>
 
