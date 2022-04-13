@@ -3,14 +3,24 @@
 window.onload = main;
 var divPlayerMoves = document.getElementById("playerMoves");
 var divAiMoves = document.getElementById("aiMoves");
+var divPlayerMoves2 = document.getElementById("playerMoves2");
+var divAiMoves2 = document.getElementById("aiMoves2");
+var divNbMovesPlayer = document.getElementById("nbMovesPlayer");
+var divNbMovesAI = document.getElementById("nbMovesAI");
+var divScorePlayer = document.getElementById("scorePlayer");
+var divScoreAI = document.getElementById("scoreAI");
+
+var canvasGridPlayer = document.getElementById("gridPlayer")
+var canvasGridAI = document.getElementById("gridAI")
+var canvasGridGame = document.getElementById("gridGame")
 
 const labels = ['A','B','C','D','E','F','G','H','I','J'];
 
 var listeHitAI = new Array()
 var listeHitPlayer = new Array()
 
-var scorePlayer = 0
-var scoreAI = 0
+var scorePlayer = 0;
+var scoreAI = 0;
 
 var gridPlayer;
 var gridAI;
@@ -20,27 +30,24 @@ var nbMovesAI = 0;
 
 var isPlayerGrid = true;
 
-var context2D
+var context2DP;
+var context2DAI;
+var context2DG;
 
-let ships = {
+var demoMode = true;
 
-	destroyer1 : [0,1],
-	destroyer2 : [29,39],
-	destroyer3 : [55,65],
-	destroyer4 : [70,71],
+var AItype;
 
-	submarine1 : [3,13,23],
-	submarine2 : [25,26,27],
-	submarine3 : [59,69,79],
+var randomGridID = Math.floor(Math.random() * grids.length);
+console.log(randomGridID);
+var ships = grids[randomGridID];
 
-	battleship1 : [6,7,8,9],
-	battleship2 : [20,30,40,50],
 
-	aircraftcarrier1 : [95,96,97,98,99]
+function setAI(type) {
+	AItype = type;
+	document.getElementById("containerChoseAI").style.display = "none"	
+	document.getElementById("container2").style.display = "flex"
 }
-
-var movesAI = [];
-for(let i = 0; i < 100; i++) movesAI.push(i);
 
 function getNameOfTile(id) {
 	let j = id%10
@@ -59,7 +66,7 @@ function getNameBoat(id) {
 	} return null
 }
 
-function isCoule(id, list) {
+function isSunk(id, list) {
 	for(const [boatID,indices] of Object.entries(ships)) {
     	let isInBoat = indices.includes(id)
     	if(isInBoat) {
@@ -81,137 +88,121 @@ function getBoatIndices(id) {
 
 function changeGrid() {
 	isPlayerGrid = !isPlayerGrid
-	isPlayerGrid ? gridPlayer.draw(context2D) : gridAI.draw(context2D)
+	isPlayerGrid ? gridPlayer.draw(context2DG) : gridAI.draw(context2DG)
+}
+
+function changeMode() {
+	demoMode = !demoMode
+	if(demoMode) {
+		document.getElementById("container").style.display = "none"
+		document.getElementById("container2").style.display = "flex"
+		gridPlayer.draw(context2DP);
+		gridAI.draw(context2DAI);
+	} else {
+		document.getElementById("container2").style.display = "none"
+		document.getElementById("container").style.display = "flex"
+		gridPlayer.draw(context2DG)
+	}
 }
 
 function hillClimbing(lastChoice,grid) {
 
-	if(grid.tiles[lastChoice].isOccupied && grid.tiles[lastChoice].isPlayed && !grid.tiles[lastChoice].isSunk) {
-		
-		if(lastChoice-10 >= 0) {
-		
-			if(grid.tiles[lastChoice-10].isOccupied && grid.tiles[lastChoice-10].isPlayed) {
+	let choice;
+	let bestTiles;
 
-				if(lastChoice+10 < 100 && !grid.tiles[lastChoice+10].isPlayed) grid.tiles[lastChoice+10].utility += 1;
-			}
-		}
-		
-		if(lastChoice+10 < 100) {
-			
-			if(grid.tiles[lastChoice+10].isOccupied && grid.tiles[lastChoice+10].isPlayed) {
+	switch(AItype) {
 
-				if(lastChoice-10 >= 0 && !grid.tiles[lastChoice-10].isPlayed) grid.tiles[lastChoice-10].utility += 1;
-			}
-		}
-		
-		if(lastChoice%10 != 0) {
-			
-			if(grid.tiles[lastChoice-1].isOccupied && grid.tiles[lastChoice-1].isPlayed) {
+		case "random" :
 
-				if((lastChoice+1)%10 != 0 && !grid.tiles[lastChoice+1].isPlayed) grid.tiles[lastChoice+1].utility += 1;
-			}
-		}
-		
-		if(lastChoice%10 != 9) {
-		
-			if(grid.tiles[lastChoice+1].isOccupied && grid.tiles[lastChoice+1].isPlayed)  {
+			choice = Math.floor(Math.random() * 100);
 
-				if(lastChoice-1 < 100 && !grid.tiles[lastChoice-1].isPlayed) grid.tiles[lastChoice-1].utility += 1;
+			break;
+
+		case "naive" :
+
+			bestTiles = grid.getBestTiles();
+
+			choice = bestTiles[Math.floor(Math.random() * bestTiles.length)];
+
+			break;
+
+		case "smart" :
+
+			if(grid.tiles[lastChoice].isOccupied && grid.tiles[lastChoice].isPlayed && !grid.tiles[lastChoice].isSunk) {
+				
+				if(lastChoice-10 >= 0) {
+				
+					if(grid.tiles[lastChoice-10].isOccupied && grid.tiles[lastChoice-10].isPlayed) {
+
+						if(lastChoice+10 < 100 && !grid.tiles[lastChoice+10].isPlayed) grid.tiles[lastChoice+10].utility += 1;
+					}
+				}
+				
+				if(lastChoice+10 < 100) {
+					
+					if(grid.tiles[lastChoice+10].isOccupied && grid.tiles[lastChoice+10].isPlayed) {
+
+						if(lastChoice-10 >= 0 && !grid.tiles[lastChoice-10].isPlayed) grid.tiles[lastChoice-10].utility += 1;
+					}
+				}
+				
+				if(lastChoice%10 != 0) {
+					
+					if(grid.tiles[lastChoice-1].isOccupied && grid.tiles[lastChoice-1].isPlayed) {
+
+						if((lastChoice+1)%10 != 0 && !grid.tiles[lastChoice+1].isPlayed) grid.tiles[lastChoice+1].utility += 1;
+					}
+				}
+				
+				if(lastChoice%10 != 9) {
+				
+					if(grid.tiles[lastChoice+1].isOccupied && grid.tiles[lastChoice+1].isPlayed)  {
+
+						if(lastChoice-1 < 100 && !grid.tiles[lastChoice-1].isPlayed) grid.tiles[lastChoice-1].utility += 1;
+					}
+				}
 			}
-		}
+
+			bestTiles = grid.getBestTiles();
+
+			choice = bestTiles[Math.floor(Math.random() * bestTiles.length)];
+
+			break;	
 	}
 
-	// Aléatoire parmi les meilleures utilités
-	let bestTiles = grid.getBestTiles();
-	console.log("les meilleurs : ",bestTiles);
-
-	return bestTiles[Math.floor(Math.random() * bestTiles.length)];
-}
-
-function hillClimbingPlayer(lastChoice,grid) {
-
-	if(grid.tiles[lastChoice].isOccupied && grid.tiles[lastChoice].isPlayed && !grid.tiles[lastChoice].isSunk) {
-		
-		if(lastChoice-10 >= 0) {
-		
-			if(grid.tiles[lastChoice-10].isOccupied && grid.tiles[lastChoice-10].isPlayed) {
-
-				if(lastChoice+10 < 100 && !grid.tiles[lastChoice+10].isPlayed) grid.tiles[lastChoice+10].utility += 1;
-			}
-		}
-		
-		if(lastChoice+10 < 100) {
-			
-			if(grid.tiles[lastChoice+10].isOccupied && grid.tiles[lastChoice+10].isPlayed) {
-
-				if(lastChoice-10 >= 0 && !grid.tiles[lastChoice-10].isPlayed) grid.tiles[lastChoice-10].utility += 1;
-			}
-		}
-		
-		if(lastChoice%10 != 0) {
-			
-			if(grid.tiles[lastChoice-1].isOccupied && grid.tiles[lastChoice-1].isPlayed) {
-
-				if((lastChoice+1)%10 != 0 && !grid.tiles[lastChoice+1].isPlayed) grid.tiles[lastChoice+1].utility += 1;
-			}
-		}
-		
-		if(lastChoice%10 != 9) {
-		
-			if(grid.tiles[lastChoice+1].isOccupied && grid.tiles[lastChoice+1].isPlayed)  {
-
-				if(lastChoice-1 < 100 && !grid.tiles[lastChoice-1].isPlayed) grid.tiles[lastChoice-1].utility += 1;
-			}
-		}
-	}
-
-	// Aléatoire parmi les meilleures utilités
-	let nbTiles = grid.tilesPerLine * grid.tilesPerLine
-	let maxUtility = -1;
-	let bestTiles = [];
-	
-	for(let i = 0; i < nbTiles; i++) {
-		
-		if(grid.tiles[i].utility >= maxUtility && !listeHitPlayer.includes(i)) {
-		
-			maxUtility = grid.tiles[i].utility;
-		}
-	}
-
-	// console.log(maxUtility);
-
-	for(let i = 0; i < nbTiles; i++) {
-
-		if(grid.tiles[i].utility == maxUtility && !listeHitPlayer.includes(i)) bestTiles.push(i);
-	}
-
-	console.log("les meilleurs : ",bestTiles);
-
-	return bestTiles[Math.floor(Math.random() * bestTiles.length)];
+	return choice;
 }
 
 function main() {
 
-	const canvasList = document.getElementsByTagName('canvas')
+	canvasGridGame.height = 380;
+	canvasGridGame.width = 400;
 
-	const canvas = canvasList[0];
-	canvas.height = 480;
-	canvas.width = 500;
+	canvasGridAI.height = 380;
+	canvasGridAI.width = 400;
 
-	context2D = canvas.getContext('2d');
+	canvasGridPlayer.height = 380;
+	canvasGridPlayer.width = 400;
+
+	context2DP = canvasGridPlayer.getContext('2d')
+	context2DAI = canvasGridAI.getContext('2d');
+	context2DG = canvasGridGame.getContext('2d');
 
 	let tilesPerLine = 10;
 	let offset = 30;
 	let img = new Image();
+	let imgHit = new Image();
 	img.src = "images/redcross.jpg";
+	imgHit.src = "images/hit.png";
 
-	gridPlayer = new Grid(tilesPerLine,canvas.width,offset,img, "Player");
-	gridAI = new Grid(tilesPerLine,canvas.width,offset,img, "AI");
+	gridPlayer = new Grid(tilesPerLine,canvasGridPlayer.width,offset,img,imgHit,"Player");
+	gridAI = new Grid(tilesPerLine,canvasGridAI.width,offset,img,imgHit,"AI");
 
 	gridPlayer.generate(ships);
-	gridPlayer.draw(context2D);
-
 	gridAI.generate(ships);
+
+	gridPlayer.draw(context2DP);
+	gridAI.draw(context2DAI);
 
 	let xPosClick;
 	let yPosClick;
@@ -221,44 +212,60 @@ function main() {
 
 	let choice = 0;
 
-	canvas.addEventListener('click',function(event) { 
+	canvasGridPlayer.addEventListener('click',function(event) { 
 		
-		xPosClick = event.pageX - canvas.offsetLeft;
-		yPosClick = event.pageY - canvas.offsetTop; 
+		xPosClick = event.pageX - canvasGridPlayer.offsetLeft;
+		yPosClick = event.pageY - canvasGridPlayer.offsetTop; 
 
 		let id = gridPlayer.find(xPosClick,yPosClick);
 
 		statusPlayer = gridPlayer.attack("player",id);
 
-		let mabite = hillClimbingPlayer(id,gridPlayer);
-
-		console.log("Prochain coup letsgo",getNameOfTile(mabite));
-
-		gridPlayer.draw(context2D)
+		gridPlayer.draw(context2DP)
 
 		if(statusPlayer != "invalid") {
 
 			if(statusPlayer == "miss") {
 				do {
-					// statusAI = gridAI.attack("ai",Math.floor(Math.random() * 100));
-					choice = hillClimbing(choice,gridAI); console.log("COUP IA ",choice); statusAI = gridAI.attack("ai",choice); 
+					choice = hillClimbing(choice,gridAI); 
 
-					console.log("status AI : ", statusAI)
-
+					statusAI = gridAI.attack("ai",choice); 
+	
+					gridAI.draw(context2DAI);
 				} while (statusAI == "hit" || statusAI == "invalid")
 			}
-
 		}
-	
-		// console.log("status player : ", statusPlayer)
-		// console.log("status AI : ", statusAI)
-	
+	});
+
+	canvasGridGame.addEventListener('click',function(event) { 
+		
+		xPosClick = event.pageX - canvasGridGame.offsetLeft;
+		yPosClick = event.pageY - canvasGridGame.offsetTop; 
+
+		let id = gridPlayer.find(xPosClick,yPosClick);
+
+		console.log(id);
+
+		statusPlayer = gridPlayer.attack("player",id);
+
+		gridPlayer.draw(context2DG)
+
+		if(statusPlayer != "invalid") {
+
+			if(statusPlayer == "miss") {
+				do {
+					choice = hillClimbing(choice,gridAI); 
+
+					statusAI = gridAI.attack("ai",choice); 
+				} while (statusAI == "hit" || statusAI == "invalid")
+			}
+		}
 	});
 }
 
 class Grid {
 
-	constructor(tilesPerLine, canvasWidth, offset, image, name) {
+	constructor(tilesPerLine, canvasWidth, offset, image, imageHit, name) {
 
 		this.score = 0;
 		this.tilesPerLine = tilesPerLine;
@@ -273,11 +280,11 @@ class Grid {
 
 			for(let j = 0; j < tilesPerLine; j++) {
 
-				if(i == 0) this.tiles[i * tilesPerLine + j] = new Tile(xPos,yPos,this.tileSize,image);
+				if(i == 0) this.tiles[i * tilesPerLine + j] = new Tile(xPos,yPos,this.tileSize,image,imageHit);
 				
-				else if(j == 0) this.tiles[i * tilesPerLine + j] = new Tile(xPos,yPos,this.tileSize,image);
+				else if(j == 0) this.tiles[i * tilesPerLine + j] = new Tile(xPos,yPos,this.tileSize,image,imageHit);
 
-				else this.tiles[i * tilesPerLine + j] = new Tile(xPos,yPos,this.tileSize,image);
+				else this.tiles[i * tilesPerLine + j] = new Tile(xPos,yPos,this.tileSize,image,imageHit);
 
 				xPos += this.tileSize;
 			}
@@ -321,6 +328,8 @@ class Grid {
 
 			for(let i = 0; i < boatIndices.length; i++) {
 
+				this.tiles[boatIndices[i]].isSunk = true;
+
 				if(boatIndices[i]-10 >= 0) {
 					this.tiles[boatIndices[i]-10].utility = -2;
 				}
@@ -351,7 +360,7 @@ class Grid {
 		let xPos = 30;
 		let yPos = 20;
 		let xPosNb = 10;
-		let yPosNb = 60;
+		let yPosNb = 55;
 
 		for(let i = 0; i < 10; i++) {
 
@@ -365,8 +374,30 @@ class Grid {
 			yPosNb += this.tileSize;
 		}
 
-		document.getElementById("gridName").innerHTML = this.name + " (" + (this.name == "Player" ? nbMovesPlayer : nbMovesAI) + ")";
-		document.getElementById("gridName").innerHTML += "</br>" + scorePlayer + " VS " + scoreAI;
+		// Affichage duo
+		document.getElementById("gridNamePlayer").innerHTML = "Player"
+		divNbMovesPlayer.innerHTML = "Moves count : " + nbMovesPlayer;
+		divScorePlayer.innerHTML = "Sunk boat(s) : " + scorePlayer;
+		document.getElementById("gridNameAI").innerHTML = "AI"
+		divNbMovesAI.innerHTML = "Moves count : " + nbMovesAI;
+		divScoreAI.innerHTML = "Sunk boat(s) : " + scoreAI;
+
+		// Affichage solo
+		if(this.name == "Player") {
+
+			document.getElementById("gridName").innerHTML = "Player";
+			document.getElementById("gridName").style.color = "#06B6D7";
+			document.getElementById("nbMoves").innerHTML = "Moves count : " + nbMovesPlayer;
+			document.getElementById("score").innerHTML = "Sunk boat(s) : " + scorePlayer;
+		}
+
+		else {
+
+			document.getElementById("gridName").innerHTML = "AI";
+			document.getElementById("gridName").style.color = "#EE3A22";
+			document.getElementById("nbMoves").innerHTML = "Moves count : " + nbMovesAI;
+			document.getElementById("score").innerHTML = "Sunk boat(s) : " + scoreAI;
+		}
 	}
 
 	find(xPosClick, yPosClick) {
@@ -403,14 +434,10 @@ class Grid {
 			}
 		}
 
-		// console.log(maxUtility);
-
 		for(let i = 0; i < nbTiles; i++) {
 
 			if(this.tiles[i].utility == maxUtility && !listeHitAI.includes(i)) bestTiles.push(i);
 		}
-				// if(this.tiles[i].utility > maxUtility) bestTiles = [];
-				// if(!listeHitAI.includes(i)) bestTiles.push(i);
 
 		return bestTiles;
 	}
@@ -423,12 +450,13 @@ class Grid {
 
 class Tile {
 
-	constructor(xPos, yPos, size, image) {
+	constructor(xPos, yPos, size, image, imageHit) {
 
 		this.xPos = xPos;
 		this.yPos = yPos;
 		this.size = size;
 		this.image = image;
+		this.imageHit = imageHit;
 		this.isOccupied = false;
 		this.isPlayed = false;
 		this.isSunk = false;
@@ -441,10 +469,9 @@ class Tile {
 		let status = "invalid";
 
 		let currentDiv;
+		let currentDiv2;
 
 		if(!this.isPlayed) {
-
-			movesAI.filter(index => {return index != id});
 
 			status = "miss";
 
@@ -452,24 +479,28 @@ class Tile {
 
 				case "player" : 
 					currentDiv = divPlayerMoves;
+					currentDiv2 = divPlayerMoves2;
 					listeHitPlayer.push(id);
 					nbMovesPlayer++;
-					console.log(nbMovesPlayer);
-					// console.log(listeHitPlayer)
 					break;
 
 				case "ai" : 
 					currentDiv = divAiMoves;
+					currentDiv2 = divAiMoves2;
 					listeHitAI.push(id);
 					nbMovesAI++;
-					// console.log(listeHitAI)
 					break;
 
 			}
 
 			let span = document.createElement("span");
 			span.classList.add("move")
-			span.innerHTML += "Move played in <strong>" + getNameOfTile(id) + "</strong>";	
+			span.innerHTML += "Move played in <strong>" + getNameOfTile(id) + "</strong>";
+
+			let span2 = document.createElement("span");
+			span2.classList.add("move")
+
+			currentDiv === divPlayerMoves ? span2.innerHTML += "Move played in <strong>" + getNameOfTile(id) + "</strong>" : span2.innerHTML += "Move played in <strong>**</strong>"
 
 			if(this.isOccupied) {
 
@@ -477,28 +508,34 @@ class Tile {
 
 				status = "hit"
 				
-				if(tag == "player" && isCoule(id, listeHitPlayer)) { 
+				if(tag == "player" && isSunk(id, listeHitPlayer)) { 
 					span.innerHTML += "(Hit - Sunk) (" + getNameBoat(id) + ")"
+					span2.innerHTML += "(Hit - Sunk) (" + getNameBoat(id) + ")"
 					this.isSunk = true;
 					scorePlayer++;
 					if (scorePlayer == 10) alert("Vous avez gagné")
-				} else if(tag == "ai" && isCoule(id, listeHitAI)) {
+				} else if(tag == "ai" && isSunk(id, listeHitAI)) {
 					span.innerHTML += "(Hit - Sunk) (" + getNameBoat(id) + ")"
+					span2.innerHTML += "(Hit - Sunk) (" + getNameBoat(id) + ")"
 					this.isSunk = true;
 					scoreAI++;
-					if (scoreAI == 10) alert("L'IA A GAGNE")
-				} else span.innerHTML += " (Hit)";
+					if (scoreAI == 10) alert("L'IA A GAGNE");
+				} else {
+					span.innerHTML += " (Hit)";
+					span2.innerHTML += " (Hit)";
+				} 
 			}
 
 			else {
 
 				span.innerHTML += " (Miss)";
+				span2.innerHTML += " (Miss)";
 			}
 
 			this.isPlayed = true;
 
 			currentDiv.appendChild(span);
-			//currentDiv.appendChild(document.createElement('br'));
+			currentDiv2.appendChild(span2);
 		}
 
 		return status;
@@ -509,9 +546,9 @@ class Tile {
 		context2D.fillStyle = this.color;
 		context2D.fillRect(this.xPos,this.yPos,this.size,this.size);
 		context2D.strokeRect(this.xPos,this.yPos,this.size,this.size);
-		// context2D.font = '24px sans-serif';
-		// context2D.fillStyle = "black";
-		// context2D.fillText(this.label,this.xPos+5,this.yPos+15);
-		if(this.isPlayed) context2D.drawImage(this.image,this.xPos+(this.size-this.size/1.5)/2,this.yPos+(this.size-this.size/1.5)/2,this.size/1.5,this.size/1.5);
+		if(this.isSunk) context2D.filter = 'grayscale(100%)';
+		if(this.isPlayed && this.isOccupied) context2D.drawImage(this.imageHit,this.xPos+(this.size-this.size/1)/2,this.yPos+(this.size-this.size/1)/2,this.size/1,this.size/1);
+        else if(this.isPlayed) context2D.drawImage(this.image,this.xPos+(this.size-this.size/1.5)/2,this.yPos+(this.size-this.size/1.5)/2,this.size/1.5,this.size/1.5);
+        context2D.filter = 'none';
 	}
 }
