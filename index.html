@@ -8,26 +8,76 @@
 </head>
 
 <body>
-	<div id="container">
+
+	<div id="containerChoseAI" style="display: flex">
+		<div class="AIChoice" style="background-color: #CD22EE" onclick="setAI('random')">
+			<span class="AIChoiceText" style="font-size:3em;">Random</span>
+		</div>
+		<div class="AIChoice" style="background-color: #2284EE" onclick="setAI('naive')">
+			<span class="AIChoiceText" style="font-size:3em;">Simple Hillclimbing</span>
+		</div>
+		<div class="AIChoice" style="background-color: #EE2E22" onclick="setAI('smart')">
+			<span class="AIChoiceText" style="font-size:3em;">Smart Hillclimbing</span>
+		</div>
+	</div>
+
+	<div id="container2" style="display: none">
 		<div id="player" class="moves">
 			<h1 class="movesTitle">Player moves</h1>
 			<div id="playerMoves" style="width:100%;"></div>
 		</div>
-		<div id="game">
-			<div id="switchGrid">
-				<button onmousedown="changeGrid()" onmouseup="changeGrid()">
-					Change grid
-				</button>
+		<div id="game2">
+			<div>
+				<button onclick="changeMode()">Game mode</button>
 			</div>
-			<h1 style="font-size:4em;">battleship.ai</h1>
-			<canvas></canvas>
-			<div id="gridName" style="font-size:2em;"></div>
+			<h1 style="font-size:3em;">battleship.ai</h1>
+			<div style="display: flex; flex-direction: row">
+				<div style="justify-content: space-between;">
+					<canvas id="gridPlayer"></canvas>
+					<div id="gridNamePlayer" style="font-size:1.5em; text-align: center; color:#06B6D7"></div>
+					<div id="nbMovesPlayer" style="font-size:1.25em; text-align: center; padding:5px"></div>
+					<div id="scorePlayer" style="font-size:1.25em; text-align: center"></div>
+				</div>
+				<div>
+					<canvas id="gridAI"></canvas>
+					<div id="gridNameAI" style="font-size:1.5em; text-align: center; color:#EE3A22"></div>
+					<div id="nbMovesAI" style="font-size:1.25em; text-align: center; padding:5px"></div>
+					<div id="scoreAI" style="font-size:1.25em; text-align: center"></div>
+				</div>
+			</div>
 		</div>
 		<div id="ai" class="moves">
 			<h1 class="movesTitle">AI moves</h1>
 			<div id="aiMoves" style="width:100%;"></div>
 		</div>
 	</div>
+
+
+	<div id="container" style="display: none">
+		<div id="player" class="moves">
+			<h1 class="movesTitle">Player moves</h1>
+			<div id="playerMoves2" style="width:100%;"></div>
+		</div>
+		<div id="game">
+			<div id="switchGrid">
+				<button onclick="changeMode()">Demo mode</button>
+				<button onclick="changeGrid()">
+					Change grid
+				</button>
+			</div>
+			<h1 style="font-size:3em;">battleship.ai</h1>
+			<canvas id="gridGame"></canvas>
+			<div id="gridName" style="font-size:1.5em; text-align: center;"></div>
+			<div id="nbMoves" style="font-size:1.25em; text-align: center; padding:5px"></div>
+			<div id="score" style="font-size:1.25em; text-align: center"></div>
+		</div>
+		<div id="ai" class="moves">
+			<h1 class="movesTitle">AI moves</h1>
+			<div id="aiMoves2" style="width:100%;"></div>
+		</div>
+	</div>
+
+
 	<script src="ships.js"></script>
 	<script src="app.js"></script>
 </body>
