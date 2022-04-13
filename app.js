@@ -265,7 +265,6 @@ function main() {
 
 class Grid {
 
-	constructor(tilesPerLine, canvasWidth, offset, image, imageHit, name) {
 
 		this.score = 0;
 		this.tilesPerLine = tilesPerLine;
@@ -321,6 +320,7 @@ class Grid {
 				this.tiles[id+1].utility += 1;
 			}
 		}
+
 
 		if(this.tiles[id].isSunk) {
 
